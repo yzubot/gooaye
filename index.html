@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GooayeTracker · 股癌選股追蹤</title><link rel="stylesheet" href="style.css?v=4">
+</head><body>
+<header>
+  <h1>📈 GooayeTracker</h1>
+  <span class="sub">股癌 Podcast 選股追蹤 · <a href="index.html">總覽</a> · <a href="positions.html">倉位狀態</a></span>
+  <span class="sub muted" id="meta"></span>
+</header>
+<div class="wrap">
+
+<div class="cards" id="cards"></div>
+<div class="filters">
+  <button data-f="all" class="active">全部</button>
+  <button data-f="buy">做多</button>
+  <button data-f="sell">做空</button>
+  <button data-f="watch">觀察</button>
+  <button data-f="US">美股</button>
+  <button data-f="TW">台股</button>
+  <input id="search" type="text" placeholder="搜尋股票/代號/集數…">
+</div>
+<div id="tableArea"><div class="empty">載入中…</div></div>
+</div>
+<p class="muted" style="padding:16px 24px;font-size:12px">
+本站為個人研究參考，非投資建議；AI 對買賣的判讀可能有誤，請以原集內容為準。
+資料為快照，更新時間見頁首。</p>
+</body></html>
+<script>
+let DATA=null, filter='all';
+function pct(v){ if(v==null) return '<span class="flat">—</span>';
+  const s=v>0?'pos':(v<0?'neg':'flat'); const t=(v>0?'+':'')+v.toFixed(1)+'%'; return `<span class="${s}">${t}</span>`; }
+function num(v){ return v==null?'—':v.toFixed(2); }
+function mkt(m){ return m==='US'?'<span class="tag us">美股</span>':(m==='TW'?'<span class="tag tw">台股</span>':`<span class="muted">${m||''}</span>`); }
+function cards(s){
+  return `
+  <div class="card"><div class="label">提及標的數</div><div class="value">${s.total_picks}</div></div>
+  <div class="card"><div class="label">做多 / 做空 / 觀察</div><div class="value"><span class="pos">${s.n_buy}</span> / <span class="neg">${s.n_sell}</span> / <span class="flat">${s.n_watch}</span></div></div>
+  <div class="card"><div class="label">可評估建議數</div><div class="value">${s.n_actionable}</div></div>
+  <div class="card"><div class="label">勝率（跟單為正）</div><div class="value">${s.win_rate.toFixed(0)}%</div></div>
+  <div class="card"><div class="label">平均跟單盈虧</div><div class="value ${s.avg_signal_ret>0?'pos':(s.avg_signal_ret<0?'neg':'')}">${(s.avg_signal_ret>0?'+':'')+s.avg_signal_ret.toFixed(1)}%</div></div>`;
+}
+function rowHtml(r){
+  return `<tr data-stance="${r.stance}" data-market="${r.market}">
+    <td data-label="股票"><strong>${r.name||'—'}</strong>${r.ticker?`<span class="muted ticker">${r.ticker}</span>`:''}</td>
+    <td data-label="市場">${mkt(r.market)}</td>
+    <td data-label="集數">EP${r.ep}</td>
+    <td data-label="提及日期" class="muted">${r.pub_date||'—'}</td>
+    <td data-label="態度"><span class="tag ${r.stance}">${r.stance_label}</span></td>
+    <td data-label="信心"><span class="conf-bar"><span class="conf-fill" style="width:${Math.round((r.confidence||0)*100)}%"></span></span></td>
+    <td data-label="進場價" class="num">${num(r.entry_price)}</td>
+    <td data-label="現價" class="num">${num(r.last_price)}</td>
+    <td data-label="漲跌幅" class="num">${pct(r.pct_change)}</td>
+    <td data-label="跟單盈虧" class="num">${pct(r.signal_ret)}</td>
+    <td data-label="摘要" class="summary-cell">${r.summary||''}</td></tr>`;
+}
+function render(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const rows=DATA.picks.filter(r=>{
+    const okF= filter==='all'||r.stance===filter||r.market===filter;
+    const hay=`${r.name} ${r.ticker} EP${r.ep} ${r.summary}`.toLowerCase();
+    return okF && (!q||hay.includes(q));
+  });
+  const head=`<div class="table-wrap"><table id="picksTable"><thead><tr>
+    <th>股票</th><th>市場</th><th>集數</th><th>提及日期</th><th>態度</th><th>信心</th>
+    <th class="num">進場價</th><th class="num">現價</th><th class="num">漲跌幅</th><th class="num">跟單盈虧</th><th>摘要</th>
+    </tr></thead><tbody>${rows.map(rowHtml).join('')}</tbody></table></div>`;
+  document.getElementById('tableArea').innerHTML = rows.length?head:'<div class="empty">沒有符合條件的標的。</div>';
+  attachSort();
+}
+function attachSort(){
+  document.querySelectorAll('#picksTable th').forEach((th,i)=>{ let asc=true;
+    th.style.cursor='pointer';
+    th.onclick=()=>{ const tb=th.closest('table').querySelector('tbody');
+      const trs=[...tb.querySelectorAll('tr')];
+      trs.sort((a,b)=>{ const x=a.children[i].innerText.replace(/[%+]/g,''),y=b.children[i].innerText.replace(/[%+]/g,'');
+        const nx=parseFloat(x),ny=parseFloat(y);
+        if(!isNaN(nx)&&!isNaN(ny)) return asc?nx-ny:ny-nx;
+        return asc?x.localeCompare(y,'zh-Hant'):y.localeCompare(x,'zh-Hant'); });
+      asc=!asc; trs.forEach(t=>tb.appendChild(t)); };
+  });
+}
+fetch('data.json').then(r=>r.json()).then(d=>{
+  DATA=d;
+  document.getElementById('meta').textContent=`· ${d.n_episodes} 集（已分析 ${d.n_analyzed}）· 更新 ${d.generated_at}`;
+  document.getElementById('cards').innerHTML=cards(d.summary);
+  render();
+  document.querySelectorAll('.filters button').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('.filters button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); filter=b.dataset.f; render(); });
+  document.getElementById('search').oninput=render;
+});
+</script>

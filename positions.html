@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>倉位狀態 · GooayeTracker</title><link rel="stylesheet" href="style.css?v=4">
+</head><body>
+<header>
+  <h1>📈 GooayeTracker</h1>
+  <span class="sub">股癌 Podcast 選股追蹤 · <a href="index.html">總覽</a> · <a href="positions.html">倉位狀態</a></span>
+  <span class="sub muted" id="meta"></span>
+</header>
+<div class="wrap">
+
+<div class="cards" id="cards"></div>
+<div id="area"><div class="empty">載入中…</div></div>
+</div>
+<p class="muted" style="padding:16px 24px;font-size:12px">
+本站為個人研究參考，非投資建議；AI 對買賣的判讀可能有誤，請以原集內容為準。
+資料為快照，更新時間見頁首。</p>
+</body></html>
+<script>
+function pct(v){ if(v==null) return '<span class="flat">—</span>';
+  const s=v>0?'pos':(v<0?'neg':'flat'); return `<span class="${s}">${(v>0?'+':'')+v.toFixed(1)+'%'}</span>`; }
+function num(v){ return v==null?'—':v.toFixed(2); }
+function mkt(m){ return m==='US'?'<span class="tag us">美股</span>':(m==='TW'?'<span class="tag tw">台股</span>':`<span class="muted">${m||''}</span>`); }
+fetch('data.json').then(r=>r.json()).then(d=>{
+  document.getElementById('meta').textContent=`· 更新 ${d.generated_at}`;
+  const p=d.positions, s=p.summary;
+  document.getElementById('cards').innerHTML=`
+    <div class="card"><div class="label">持有中（未下車）</div><div class="value">${s.n_open}</div></div>
+    <div class="card"><div class="label">已下車（已平倉）</div><div class="value">${s.n_closed}</div></div>
+    <div class="card"><div class="label">已下車勝率</div><div class="value">${s.closed_win_rate.toFixed(0)}%</div></div>
+    <div class="card"><div class="label">已下車平均實現</div><div class="value ${s.closed_avg>0?'pos':(s.closed_avg<0?'neg':'')}">${(s.closed_avg>0?'+':'')+s.closed_avg.toFixed(1)}%</div></div>
+    <div class="card"><div class="label">持有中平均未實現</div><div class="value ${s.open_avg>0?'pos':(s.open_avg<0?'neg':'')}">${(s.open_avg>0?'+':'')+s.open_avg.toFixed(1)}%</div></div>`;
+  let h='';
+  h+='<h3>🚗 已下車（做多後又喊賣出 = 已平倉）</h3><p class="muted" style="margin-top:-6px">實現損益 = 賣出那集股價 ÷ 做多那集股價</p>';
+  h+='<div class="table-wrap"><table><thead><tr><th>股票</th><th>市場</th><th>做多集</th><th>進場日/價</th><th>下車集</th><th>出場日/價</th><th class="num">持有天數</th><th class="num">實現損益</th><th>下車原因</th></tr></thead><tbody>';
+  h+=p.closed.map(c=>`<tr><td data-label="股票"><strong>${c.name}</strong> <span class="muted ticker">${c.ticker}</span></td>
+    <td data-label="市場">${mkt(c.market)}</td><td data-label="做多集">EP${c.buy_ep}</td>
+    <td data-label="進場日/價" class="muted">${c.buy_date} / ${num(c.entry_price)}</td>
+    <td data-label="下車集">EP${c.sell_ep}</td><td data-label="出場日/價" class="muted">${c.sell_date} / ${num(c.exit_price)}</td>
+    <td data-label="持有天數" class="num">${c.held_days??'—'}</td><td data-label="實現損益" class="num">${pct(c.realized_pct)}</td>
+    <td data-label="下車原因" class="summary-cell">${c.sell_summary||''}</td></tr>`).join('');
+  h+='</tbody></table></div>'; if(!p.closed.length) h+='<div class="empty">目前沒有完整平倉紀錄。</div>';
+
+  h+='<h3 style="margin-top:32px">📦 持有中（做多後還沒喊賣出）</h3>';
+  h+='<div class="table-wrap"><table><thead><tr><th>股票</th><th>市場</th><th>做多集</th><th>進場日</th><th class="num">進場價</th><th class="num">現價</th><th class="num">持有天數</th><th class="num">未實現損益</th><th>做多理由</th></tr></thead><tbody>';
+  h+=p.open.map(o=>`<tr><td data-label="股票"><strong>${o.name}</strong> <span class="muted ticker">${o.ticker}</span></td>
+    <td data-label="市場">${mkt(o.market)}</td><td data-label="做多集">EP${o.buy_ep}</td>
+    <td data-label="進場日" class="muted">${o.buy_date}</td><td data-label="進場價" class="num">${num(o.entry_price)}</td>
+    <td data-label="現價" class="num">${num(o.last_price)}</td><td data-label="持有天數" class="num">${o.held_days??'—'}</td>
+    <td data-label="未實現損益" class="num">${pct(o.unrealized_pct)}</td><td data-label="做多理由" class="summary-cell">${o.summary||''}</td></tr>`).join('');
+  h+='</tbody></table></div>'; if(!p.open.length) h+='<div class="empty">沒有持有中的做多倉位。</div>';
+
+  if(p.shorts && p.shorts.length){
+    h+='<h3 style="margin-top:32px">📉 純做空（喊空、之前未做多）</h3>';
+    h+='<div class="table-wrap"><table><thead><tr><th>股票</th><th>市場</th><th>做空集</th><th>日期</th><th class="num">進場價</th><th class="num">現價</th><th class="num">漲跌幅</th><th class="num">跟單盈虧</th><th>理由</th></tr></thead><tbody>';
+    h+=p.shorts.map(s=>`<tr><td data-label="股票"><strong>${s.name}</strong> <span class="muted ticker">${s.ticker}</span></td>
+      <td data-label="市場">${mkt(s.market)}</td><td data-label="做空集">EP${s.ep}</td><td data-label="日期" class="muted">${s.date}</td>
+      <td data-label="進場價" class="num">${num(s.entry_price)}</td><td data-label="現價" class="num">${num(s.last_price)}</td>
+      <td data-label="漲跌幅" class="num">${pct(s.pct_change)}</td><td data-label="跟單盈虧" class="num">${pct(s.signal_ret)}</td>
+      <td data-label="理由" class="summary-cell">${s.summary||''}</td></tr>`).join('');
+    h+='</tbody></table></div>';
+  }
+  document.getElementById('area').innerHTML=h;
+});
+</script>
