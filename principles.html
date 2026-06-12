@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>股癌交易守則 · GooayeTracker</title><link rel="stylesheet" href="style.css?v=5">
+</head><body>
+<header>
+  <h1>📈 GooayeTracker</h1>
+  <span class="sub">股癌 Podcast 選股追蹤 · <a href="index.html">總覽</a> · <a href="positions.html">倉位狀態</a> · <a href="strategy.html">跟單成績單</a> · <a href="principles.html">交易守則</a></span>
+  <span class="sub muted" id="meta"></span>
+</header>
+<div class="wrap">
+
+<div id="area"><div class="empty">載入中…</div></div>
+</div>
+<p class="muted" style="padding:16px 24px;font-size:12px">
+本站為個人研究參考，非投資建議；AI 對買賣的判讀可能有誤，請以原集內容為準。
+資料為快照，更新時間見頁首。</p>
+</body></html>
+<script>
+const ICON={mindset:'🧠',risk:'🛡️',position:'⚖️',selection:'🎯',timing:'🕐'};
+const ORDER=['mindset','risk','position','selection','timing'];
+fetch('data.json').then(r=>r.json()).then(d=>{
+  document.getElementById('meta').textContent=`· 更新 ${d.generated_at}`;
+  const D=d.digest, area=document.getElementById('area');
+  if(!D){ area.innerHTML='<div class="empty">尚未產生交易守則。</div>'; return; }
+  const nRules=ORDER.reduce((a,k)=>a+(D.pillars[k]?D.pillars[k].rules.length:0),0);
+  let h=`<div class="note-box"><strong>📜 股癌交易守則</strong>
+    <p>從 668 集逐字稿自動萃取 <strong>${D.n_principles} 條</strong>原則，再由 AI 去重歸納成
+    <strong>${nRules} 條正典守則</strong>，依五大支柱分類。每條附出現頻次與代表原話。</p>
+    <p class="muted">⚠️ 股癌只做多、不放空。本守則為研究整理，非投資建議。</p></div>`;
+  h+='<div class="pillar-nav">';
+  ORDER.forEach(k=>{ if(D.pillars[k]) h+=`<a href="#${k}">${ICON[k]} ${D.pillars[k].label.split('（')[0]}</a>`; });
+  h+='</div>';
+  ORDER.forEach(k=>{ const p=D.pillars[k]; if(!p) return;
+    h+=`<h2 id="${k}" style="margin-top:30px">${ICON[k]} ${p.label.split('（')[0]} <span class="muted" style="font-weight:400;font-size:.7em">${p.n_raw} 條原始原則 · 涵蓋 ${p.n_eps} 集</span></h2>`;
+    p.rules.forEach((r,i)=>{
+      h+=`<div class="rule-card"><div class="rule-head"><span class="rule-num">${i+1}</span>
+        <strong>${r.rule}</strong><span class="freq-tag">提及約 ${r.freq} 次</span></div>`;
+      if(r.rationale) h+=`<div class="rule-why">${r.rationale}</div>`;
+      if(r.quote) h+=`<div class="rule-quote">「${r.quote}」</div>`;
+      h+='</div>';
+    });
+  });
+  area.innerHTML=h;
+});
+</script>

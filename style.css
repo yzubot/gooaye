@@ -104,3 +104,18 @@ h3 { margin: 22px 0 12px; font-size: 16px; }
 .note-box strong { font-size: 15px; }
 .note-box p { margin: 8px 0 0; font-size: 14px; line-height: 1.6; }
 .note-box .muted { font-size: 12px; }
+
+/* 交易守則頁 */
+.pillar-nav { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+.pillar-nav a { background:var(--panel); border:1px solid var(--border);
+  border-radius:20px; padding:6px 14px; font-size:13px; }
+.rule-card { background:var(--panel); border:1px solid var(--border);
+  border-left:3px solid var(--amber); border-radius:8px; padding:12px 16px; margin:10px 0; }
+.rule-head { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.rule-num { background:var(--amber); color:#0d1117; border-radius:50%;
+  width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; flex:none; }
+.rule-head strong { font-size:15px; flex:1; min-width:200px; }
+.freq-tag { color:var(--muted); font-size:12px; white-space:nowrap; }
+.rule-why { color:var(--text); font-size:13px; line-height:1.6; margin:8px 0 0 32px; opacity:.85; }
+.rule-quote { color:var(--blue); font-size:13px; margin:6px 0 0 32px; font-style:italic; }
