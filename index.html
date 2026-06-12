@@ -13,7 +13,7 @@
 <div class="filters">
   <button data-f="all" class="active">全部</button>
   <button data-f="buy">做多</button>
-  <button data-f="sell">做空</button>
+  <button data-f="sell">賣出/避開</button>
   <button data-f="watch">觀察</button>
   <button data-f="US">美股</button>
   <button data-f="TW">台股</button>
@@ -34,7 +34,7 @@ function mkt(m){ return m==='US'?'<span class="tag us">美股</span>':(m==='TW'?
 function cards(s){
   return `
   <div class="card"><div class="label">提及標的數</div><div class="value">${s.total_picks}</div></div>
-  <div class="card"><div class="label">做多 / 做空 / 觀察</div><div class="value"><span class="pos">${s.n_buy}</span> / <span class="neg">${s.n_sell}</span> / <span class="flat">${s.n_watch}</span></div></div>
+  <div class="card"><div class="label">做多 / 賣出 / 觀察</div><div class="value"><span class="pos">${s.n_buy}</span> / <span class="neg">${s.n_sell}</span> / <span class="flat">${s.n_watch}</span></div></div>
   <div class="card"><div class="label">可評估建議數</div><div class="value">${s.n_actionable}</div></div>
   <div class="card"><div class="label">勝率（跟單為正）</div><div class="value">${s.win_rate.toFixed(0)}%</div></div>
   <div class="card"><div class="label">平均跟單盈虧</div><div class="value ${s.avg_signal_ret>0?'pos':(s.avg_signal_ret<0?'neg':'')}">${(s.avg_signal_ret>0?'+':'')+s.avg_signal_ret.toFixed(1)}%</div></div>`;

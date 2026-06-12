@@ -50,13 +50,14 @@ fetch('data.json').then(r=>r.json()).then(d=>{
     <td data-label="未實現損益" class="num">${pct(o.unrealized_pct)}</td><td data-label="做多理由" class="summary-cell">${o.summary||''}</td></tr>`).join('');
   h+='</tbody></table></div>'; if(!p.open.length) h+='<div class="empty">沒有持有中的做多倉位。</div>';
 
-  if(p.shorts && p.shorts.length){
-    h+='<h3 style="margin-top:32px">📉 純做空（喊空、之前未做多）</h3>';
-    h+='<div class="table-wrap"><table><thead><tr><th>股票</th><th>市場</th><th>做空集</th><th>日期</th><th class="num">進場價</th><th class="num">現價</th><th class="num">漲跌幅</th><th class="num">跟單盈虧</th><th>理由</th></tr></thead><tbody>';
-    h+=p.shorts.map(s=>`<tr><td data-label="股票"><strong>${s.name}</strong> <span class="muted ticker">${s.ticker}</span></td>
-      <td data-label="市場">${mkt(s.market)}</td><td data-label="做空集">EP${s.ep}</td><td data-label="日期" class="muted">${s.date}</td>
-      <td data-label="進場價" class="num">${num(s.entry_price)}</td><td data-label="現價" class="num">${num(s.last_price)}</td>
-      <td data-label="漲跌幅" class="num">${pct(s.pct_change)}</td><td data-label="跟單盈虧" class="num">${pct(s.signal_ret)}</td>
+  if(p.avoided && p.avoided.length){
+    h+='<h3 style="margin-top:32px">🚫 看壞／避開（喊賣但之前未持有 — 不放空，僅記錄後續表現）</h3>';
+    h+='<p class="muted" style="margin-top:-6px">股癌不做空。僅記錄他喊賣/看壞後該標的漲跌，後續跌＝有先見之明。</p>';
+    h+='<div class="table-wrap"><table><thead><tr><th>股票</th><th>市場</th><th>喊賣集</th><th>日期</th><th class="num">當時價</th><th class="num">現價</th><th class="num">喊賣後漲跌</th><th>理由</th></tr></thead><tbody>';
+    h+=p.avoided.map(s=>`<tr><td data-label="股票"><strong>${s.name}</strong> <span class="muted ticker">${s.ticker}</span></td>
+      <td data-label="市場">${mkt(s.market)}</td><td data-label="喊賣集">EP${s.ep}</td><td data-label="日期" class="muted">${s.date}</td>
+      <td data-label="當時價" class="num">${num(s.ref_price)}</td><td data-label="現價" class="num">${num(s.last_price)}</td>
+      <td data-label="喊賣後漲跌" class="num">${pct(s.since_pct)}</td>
       <td data-label="理由" class="summary-cell">${s.summary||''}</td></tr>`).join('');
     h+='</tbody></table></div>';
   }
