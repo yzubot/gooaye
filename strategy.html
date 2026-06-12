@@ -48,6 +48,30 @@ fetch('data.json').then(r=>r.json()).then(d=>{
     });
     h+='</tbody></table></div>';
   });
+  // === Phase 4 機械回測 ===
+  const M=d.mech;
+  if(M){
+    h+='<h2 style="margin-top:36px">🔬 機械策略回測（Phase 4）</h2>';
+    h+=`<div class="note-box"><p>把股癌的選股 alpha（buy 訊號）疊上他的「心法」機械規則，跑成真實投組淨值（已扣單邊成本 0.15%）。
+      <strong>機械</strong>＝心法疊加（大盤 MA200 擇時＋個股 MA50 順勢＋25% 移動停損＋120 日持有到期）；
+      <strong>裸跟單</strong>＝相同名額與持有期、只關掉心法過濾層。<strong>全程只做多、不放空。</strong></p>
+      <p class="muted">起始資金每市場 100 萬，等權最多 10 檔。參數為慣用預設值（未最佳化）。非投資建議。</p></div>`;
+    ['US','TW'].forEach(mkt=>{
+      const mr=M.results[mkt]; if(!mr) return;
+      const bench=mr.mechanical?mr.mechanical.metrics.bench_buyhold_pct:null;
+      h+=`<h3 style="margin-top:20px">${mkt==='US'?'🇺🇸 美股':'🇹🇼 台股'} <span class="muted" style="font-weight:400;font-size:.8em">${mr.mechanical.metrics.start} ~ ${mr.mechanical.metrics.end}</span></h3>`;
+      h+='<div class="table-wrap"><table><thead><tr><th>策略</th><th class="num">總報酬</th><th class="num">CAGR</th><th class="num">Sharpe</th><th class="num">最大回撤</th><th class="num">交易數</th><th class="num">交易勝率</th></tr></thead><tbody>';
+      ['mechanical','naive'].forEach(k=>{ if(!mr[k]) return; const m=mr[k].metrics;
+        h+=`<tr><td data-label="策略"><strong>${mr[k].label}</strong></td>
+          <td data-label="總報酬" class="num">${pct(m.total_return_pct,true)}</td><td data-label="CAGR" class="num">${pct(m.cagr_pct,true)}</td>
+          <td data-label="Sharpe" class="num">${m.sharpe==null?'—':m.sharpe.toFixed(2)}</td><td data-label="最大回撤" class="num">${pct(m.max_drawdown_pct,false)}</td>
+          <td data-label="交易數" class="num">${m.n_trades}</td><td data-label="交易勝率" class="num">${m.trade_win_rate==null?'—':m.trade_win_rate.toFixed(0)+'%'}</td></tr>`;
+      });
+      h+=`<tr class="muted"><td data-label="策略">買進持有大盤（${mkt==='TW'?'0050':'QQQ'}）</td><td data-label="總報酬" class="num">${pct(bench,true)}</td><td colspan="5" class="muted">被動基準</td></tr>`;
+      h+='</tbody></table></div>';
+    });
+    h+=`<div class="note-box"><strong>🧭 機械回測解讀</strong><p>裸跟單 ≈ 或贏大盤，印證選股有 alpha；心法疊加層在這波大牛市<strong>降低報酬、但大幅壓低回撤</strong>（台股最大回撤 −39%→−23%）。他的風控心法是「犧牲部分上漲、換取抗跌」的保險。</p></div>`;
+  }
   h+=`<div class="note-box" style="margin-top:24px"><strong>🔑 結論</strong>
     <p>跟著股癌<strong>做多、長抱(120–252日)、偏重美股</strong>有統計顯著的超額報酬：美股做多 252 日命中
     ${bus['252'].win_rate.toFixed(0)}%、超額 +${bus['252'].excess.toFixed(1)}%。放空他的「賣出」訊號則無效——再次印證只做多。</p></div>`;
