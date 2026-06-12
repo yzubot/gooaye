@@ -96,3 +96,11 @@ h3 { margin: 22px 0 12px; font-size: 16px; }
   td.summary-cell::before { flex: none; margin-bottom: 2px; }
   .conf-bar { width: 80px; }
 }
+
+/* 跟單成績單 note-box */
+.note-box { background: var(--panel); border: 1px solid var(--border);
+  border-left: 3px solid var(--blue); border-radius: 8px;
+  padding: 14px 18px; margin: 14px 0; }
+.note-box strong { font-size: 15px; }
+.note-box p { margin: 8px 0 0; font-size: 14px; line-height: 1.6; }
+.note-box .muted { font-size: 12px; }

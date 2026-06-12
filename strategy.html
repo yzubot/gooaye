@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>跟單成績單 · GooayeTracker</title><link rel="stylesheet" href="style.css?v=4">
+</head><body>
+<header>
+  <h1>📈 GooayeTracker</h1>
+  <span class="sub">股癌 Podcast 選股追蹤 · <a href="index.html">總覽</a> · <a href="positions.html">倉位狀態</a> · <a href="strategy.html">跟單成績單</a></span>
+  <span class="sub muted" id="meta"></span>
+</header>
+<div class="wrap">
+
+<div id="area"><div class="empty">載入中…</div></div>
+</div>
+<p class="muted" style="padding:16px 24px;font-size:12px">
+本站為個人研究參考，非投資建議；AI 對買賣的判讀可能有誤，請以原集內容為準。
+資料為快照，更新時間見頁首。</p>
+</body></html>
+<script>
+function pct(v,plus){ if(v==null) return '<span class="flat">—</span>';
+  const s=v>0?'pos':(v<0?'neg':'flat'); const t=(plus&&v>0?'+':'')+v.toFixed(1)+'%'; return `<span class="${s}">${t}</span>`; }
+fetch('data.json').then(r=>r.json()).then(d=>{
+  document.getElementById('meta').textContent=`· 更新 ${d.generated_at}`;
+  const S=d.strategy;
+  const area=document.getElementById('area');
+  if(!S){ area.innerHTML='<div class="empty">尚未產生跟單成績單。</div>'; return; }
+  const by=k=>S.summary.find(b=>b.key===k).data;
+  const ba=by('buy_all'), bus=by('buy_us');
+  let h='';
+  h+=`<div class="note-box"><strong>📊 股癌跟單成績單（事件研究法）</strong>
+    <p>對逐集喊出的買賣訊號，計算其後 5/20/60/120/252 個交易日的前瞻報酬，對照同期大盤
+    （台股 0050、美股 QQQ）算超額報酬。<strong>股癌只做多、不放空</strong>：buy 是可跟的做多訊號；
+    sell 僅作「出場/避開」診斷，不放空。</p>
+    <p class="muted">有效事件 ${S.n_events} 筆 · 產生於 ${S.generated_at.slice(0,10)} · 未扣交易成本；長 horizon 窗口重疊，t 偏樂觀，僅供研究參考、非投資建議。</p></div>`;
+  h+=`<div class="cards">
+    <div class="card"><div class="label">做多命中率(252日)</div><div class="value pos">${ba['252'].win_rate.toFixed(0)}%</div></div>
+    <div class="card"><div class="label">平均報酬(252日)</div><div class="value pos">+${ba['252'].mean.toFixed(1)}%</div></div>
+    <div class="card"><div class="label">超額報酬 vs 大盤</div><div class="value pos">+${ba['252'].excess.toFixed(1)}%</div></div>
+    <div class="card"><div class="label">統計顯著性 t</div><div class="value">${ba['252'].t.toFixed(1)}</div></div></div>`;
+  S.summary.forEach(blk=>{
+    h+=`<h3 style="margin-top:28px">${blk.diagnostic?'🚫':'📈'} ${blk.label} <span class="muted" style="font-weight:400;font-size:.8em">n=${blk.data['20'].n}</span></h3>`;
+    if(blk.diagnostic) h+='<p class="muted" style="margin-top:-6px">報酬/超額越低＝他喊賣越有先見之明（成功示警下跌）；本策略不放空。</p>';
+    h+='<div class="table-wrap"><table><thead><tr><th>持有期</th><th class="num">樣本數</th><th class="num">命中率</th><th class="num">平均報酬</th><th class="num">中位數</th><th class="num">超額報酬</th><th class="num">t 值</th></tr></thead><tbody>';
+    S.horizons.forEach(hz=>{ const s=blk.data[String(hz)];
+      h+=`<tr><td data-label="持有期"><strong>${hz} 日</strong></td><td data-label="樣本數" class="num">${s.n}</td>
+        <td data-label="命中率" class="num">${pct(s.win_rate,false)}</td><td data-label="平均報酬" class="num">${pct(s.mean,true)}</td>
+        <td data-label="中位數" class="num">${pct(s.median,true)}</td><td data-label="超額報酬" class="num">${pct(s.excess,true)}</td>
+        <td data-label="t 值" class="num">${s.t==null?'—':s.t.toFixed(1)}</td></tr>`;
+    });
+    h+='</tbody></table></div>';
+  });
+  h+=`<div class="note-box" style="margin-top:24px"><strong>🔑 結論</strong>
+    <p>跟著股癌<strong>做多、長抱(120–252日)、偏重美股</strong>有統計顯著的超額報酬：美股做多 252 日命中
+    ${bus['252'].win_rate.toFixed(0)}%、超額 +${bus['252'].excess.toFixed(1)}%。放空他的「賣出」訊號則無效——再次印證只做多。</p></div>`;
+  area.innerHTML=h;
+});
+</script>
