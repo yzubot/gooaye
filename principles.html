@@ -16,6 +16,7 @@
 資料為快照，更新時間見頁首。</p>
 </body></html>
 <script>
+function esc(x){ return String(x??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 const ICON={mindset:'🧠',risk:'🛡️',position:'⚖️',selection:'🎯',timing:'🕐'};
 const ORDER=['mindset','risk','position','selection','timing'];
 fetch('data.json').then(r=>r.json()).then(d=>{
@@ -34,9 +35,9 @@ fetch('data.json').then(r=>r.json()).then(d=>{
     h+=`<h2 id="${k}" style="margin-top:30px">${ICON[k]} ${p.label.split('（')[0]} <span class="muted" style="font-weight:400;font-size:.7em">${p.n_raw} 條原始原則 · 涵蓋 ${p.n_eps} 集</span></h2>`;
     p.rules.forEach((r,i)=>{
       h+=`<div class="rule-card"><div class="rule-head"><span class="rule-num">${i+1}</span>
-        <strong>${r.rule}</strong><span class="freq-tag">提及約 ${r.freq} 次</span></div>`;
-      if(r.rationale) h+=`<div class="rule-why">${r.rationale}</div>`;
-      if(r.quote) h+=`<div class="rule-quote">「${r.quote}」</div>`;
+        <strong>${esc(r.rule)}</strong><span class="freq-tag">提及約 ${r.freq} 次</span></div>`;
+      if(r.rationale) h+=`<div class="rule-why">${esc(r.rationale)}</div>`;
+      if(r.quote) h+=`<div class="rule-quote">「${esc(r.quote)}」</div>`;
       h+='</div>';
     });
   });

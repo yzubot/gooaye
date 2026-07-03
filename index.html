@@ -27,10 +27,12 @@
 </body></html>
 <script>
 let DATA=null, filter='all';
+// LLM 產出的欄位（name/summary 等）直接進 innerHTML 有 XSS 面——一律先 escape
+function esc(x){ return String(x??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function pct(v){ if(v==null) return '<span class="flat">—</span>';
   const s=v>0?'pos':(v<0?'neg':'flat'); const t=(v>0?'+':'')+v.toFixed(1)+'%'; return `<span class="${s}">${t}</span>`; }
 function num(v){ return v==null?'—':v.toFixed(2); }
-function mkt(m){ return m==='US'?'<span class="tag us">美股</span>':(m==='TW'?'<span class="tag tw">台股</span>':`<span class="muted">${m||''}</span>`); }
+function mkt(m){ return m==='US'?'<span class="tag us">美股</span>':(m==='TW'?'<span class="tag tw">台股</span>':`<span class="muted">${esc(m||'')}</span>`); }
 function cards(s){
   return `
   <div class="card"><div class="label">提及標的數</div><div class="value">${s.total_picks}</div></div>
@@ -41,7 +43,7 @@ function cards(s){
 }
 function rowHtml(r){
   return `<tr data-stance="${r.stance}" data-market="${r.market}">
-    <td data-label="股票"><strong>${r.name||'—'}</strong>${r.ticker?`<span class="muted ticker">${r.ticker}</span>`:''}</td>
+    <td data-label="股票"><strong>${esc(r.name)||'—'}</strong>${r.ticker?`<span class="muted ticker">${esc(r.ticker)}</span>`:''}</td>
     <td data-label="市場">${mkt(r.market)}</td>
     <td data-label="集數">EP${r.ep}</td>
     <td data-label="提及日期" class="muted">${r.pub_date||'—'}</td>
@@ -51,7 +53,7 @@ function rowHtml(r){
     <td data-label="現價" class="num">${num(r.last_price)}</td>
     <td data-label="漲跌幅" class="num">${pct(r.pct_change)}</td>
     <td data-label="跟單盈虧" class="num">${pct(r.signal_ret)}</td>
-    <td data-label="摘要" class="summary-cell">${r.summary||''}</td></tr>`;
+    <td data-label="摘要" class="summary-cell">${esc(r.summary)}</td></tr>`;
 }
 function render(){
   const q=(document.getElementById('search').value||'').toLowerCase();
